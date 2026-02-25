@@ -2,23 +2,50 @@ import os
 import threading
 from flask import Flask, request
 import telebot
-
+import time
 
 TOKEN = os.environ.get('TOKEN')
 bot = telebot.TeleBot(TOKEN)
 
-
 app = Flask(__name__)
+
+def normalize_text(text):
+    """Приводим текст к единому виду, заменяя английские буквы на русские"""
+    if not text:
+        return text
+    
+    replacements = {
+        'a': 'а', 'b': 'б', 'c': 'ц', 'd': 'д', 'e': 'е', 'f': 'ф', 
+        'g': 'г', 'h': 'х', 'i': 'и', 'j': 'й', 'k': 'к', 'l': 'л', 
+        'm': 'м', 'n': 'н', 'o': 'о', 'p': 'п', 'q': 'к', 'r': 'р', 
+        's': 'с', 't': 'т', 'u': 'у', 'v': 'в', 'w': 'в', 'x': 'кс', 
+        'y': 'ы', 'z': 'з'
+    }
+    
+    text_lower = text.lower()
+    normalized = ''
+    for char in text_lower:
+        if char in replacements:
+            normalized += replacements[char]
+        else:
+            normalized += char
+    
+    return normalized
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     if message.chat.type in ['group', 'supergroup']:
-        message_text = message.text.lower() if message.text else ''
-        if 'сосал' in message_text:
+        message_text = message.text.lower().strip() if message.text else ''
+        
+        normalized_text = normalize_text(message_text)
+        
+        if 'сосал' in message_text or 'сосал' in normalized_text:
             bot.reply_to(message, "да")
-        elif message_text in ['да', 'lf', 'da']:
+        
+        elif (message_text in ['да', 'lf', 'da', 'дa', 'дa', 'dа'] or  
+              normalized_text in ['да', 'да'] or  
+              message_text == 'да'):  
             bot.reply_to(message, "Сосал?")
-
 
 @app.route('/')
 @app.route('/health')
@@ -27,11 +54,16 @@ def health():
     return 'OK', 200
 
 def run_bot():
-    bot.infinity_polling()
+    while True:
+        try:
+            bot.infinity_polling(timeout=60, long_polling_timeout=60)
+        except Exception as e:
+            print(f"Bot crashed: {e}, restarting in 5 seconds...")
+            time.sleep(5)
 
 if __name__ == '__main__':
-
     threading.Thread(target=run_bot, daemon=True).start()
+    
 
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
