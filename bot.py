@@ -1,6 +1,6 @@
 import os
 import threading
-from flask import Flask, request
+from flask import Flask
 import telebot
 import time
 
@@ -10,7 +10,6 @@ bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
 def normalize_text(text):
-    """Приводим текст к единому виду, заменяя английские буквы на русские"""
     if not text:
         return text
     
@@ -36,15 +35,13 @@ def normalize_text(text):
 def handle_message(message):
     if message.chat.type in ['group', 'supergroup']:
         message_text = message.text.lower().strip() if message.text else ''
-        
         normalized_text = normalize_text(message_text)
         
         if 'сосал' in message_text or 'сосал' in normalized_text:
             bot.reply_to(message, "да")
-        
-        elif (message_text in ['да', 'lf', 'da', 'дa', 'дa', 'dа'] or  
-              normalized_text in ['да', 'да'] or  
-              message_text == 'да'):  
+        elif (message_text in ['да', 'lf', 'da', 'дa', 'дa', 'dа'] or
+              normalized_text in ['да'] or
+              message_text == 'да'):
             bot.reply_to(message, "Сосал?")
 
 @app.route('/')
@@ -63,7 +60,5 @@ def run_bot():
 
 if __name__ == '__main__':
     threading.Thread(target=run_bot, daemon=True).start()
-    
-
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
