@@ -5,6 +5,8 @@ import telebot
 import time
 
 TOKEN = os.environ.get('TOKEN')
+ALLOWED_USERS = [1585718150] 
+
 bot = telebot.TeleBot(TOKEN)
 
 app = Flask(__name__)
@@ -36,13 +38,18 @@ def handle_message(message):
     if message.chat.type in ['group', 'supergroup']:
         message_text = message.text.lower().strip() if message.text else ''
         normalized_text = normalize_text(message_text)
+        user_id = message.from_user.id
         
-        if 'сосал' in message_text or 'сосал' in normalized_text:
-            bot.reply_to(message, "да")
-        elif (message_text in ['да', 'lf', 'da', 'дa', 'дa', 'dа'] or
-              normalized_text in ['да'] or
-              message_text == 'да'):
-            bot.reply_to(message, "Сосал?")
+        if user_id in ALLOWED_USERS:
+            if 'test' in message_text:
+                bot.reply_to(message, "Сосал?")
+        else:
+            if 'сосал' in message_text or 'сосал' in normalized_text:
+                bot.reply_to(message, "да")
+            elif (message_text in ['да', 'lf', 'da', 'дa', 'дa', 'dа'] or
+                  normalized_text in ['да'] or
+                  message_text == 'да'):
+                bot.reply_to(message, "Сосал?")
 
 @app.route('/')
 @app.route('/health')
